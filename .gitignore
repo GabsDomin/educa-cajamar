@@ -4,6 +4,7 @@ dist/
 _spec/
 .env
 .env.*
+!.env.example
 *.local
 
 npm-debug.log*
