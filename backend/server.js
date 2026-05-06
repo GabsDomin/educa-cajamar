@@ -27,6 +27,12 @@ const asDateString = (value) => {
   return value.toISOString().slice(0, 10);
 };
 
+const asNullableNumber = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
 const rowToInstitution = (row) => ({
   id: row.id,
   name: row.name,
@@ -55,6 +61,11 @@ const rowToInstitution = (row) => ({
   schoolLevels: row.school_levels || undefined,
   schoolShifts: row.school_shifts || undefined,
   infrastructure: row.infrastructure || undefined,
+  nota_portugues_saresp: asNullableNumber(row.nota_portugues_saresp),
+  nota_matematica_saresp: asNullableNumber(row.nota_matematica_saresp),
+  ano_base: asNullableNumber(row.ano_base),
+  taxa_aprovacao: asNullableNumber(row.taxa_aprovacao),
+  taxa_evolucao: asNullableNumber(row.taxa_evolucao),
 });
 
 const rowToActivity = (row) => ({
@@ -107,7 +118,12 @@ const createSchema = async () => {
       school_network TEXT,
       school_levels JSONB,
       school_shifts JSONB,
-      infrastructure JSONB
+      infrastructure JSONB,
+      nota_portugues_saresp NUMERIC,
+      nota_matematica_saresp NUMERIC,
+      ano_base INTEGER,
+      taxa_aprovacao NUMERIC,
+      taxa_evolucao NUMERIC
     );
 
     CREATE TABLE IF NOT EXISTS activities (
@@ -134,7 +150,12 @@ const createSchema = async () => {
 
   await pool.query(`
     ALTER TABLE institutions
-      ADD COLUMN IF NOT EXISTS image_url TEXT;
+      ADD COLUMN IF NOT EXISTS image_url TEXT,
+      ADD COLUMN IF NOT EXISTS nota_portugues_saresp NUMERIC,
+      ADD COLUMN IF NOT EXISTS nota_matematica_saresp NUMERIC,
+      ADD COLUMN IF NOT EXISTS ano_base INTEGER,
+      ADD COLUMN IF NOT EXISTS taxa_aprovacao NUMERIC,
+      ADD COLUMN IF NOT EXISTS taxa_evolucao NUMERIC;
   `);
 };
 
@@ -153,13 +174,14 @@ const insertInstitution = async (institution) => {
         id, name, type, rating, address, street, number, neighborhood, city, state,
         phone, email, image_url, description, opening_hours, target_audience, is_free,
         accessibility, responsible, status, last_update, lat, lng, school_network,
-        school_levels, school_shifts, infrastructure
+        school_levels, school_shifts, infrastructure, nota_portugues_saresp,
+        nota_matematica_saresp, ano_base, taxa_aprovacao, taxa_evolucao
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17,
         $18, $19, $20, $21, $22, $23, $24,
-        $25, $26, $27
+        $25, $26, $27, $28, $29, $30, $31, $32
       )
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
@@ -187,7 +209,12 @@ const insertInstitution = async (institution) => {
         school_network = EXCLUDED.school_network,
         school_levels = EXCLUDED.school_levels,
         school_shifts = EXCLUDED.school_shifts,
-        infrastructure = EXCLUDED.infrastructure
+        infrastructure = EXCLUDED.infrastructure,
+        nota_portugues_saresp = EXCLUDED.nota_portugues_saresp,
+        nota_matematica_saresp = EXCLUDED.nota_matematica_saresp,
+        ano_base = EXCLUDED.ano_base,
+        taxa_aprovacao = EXCLUDED.taxa_aprovacao,
+        taxa_evolucao = EXCLUDED.taxa_evolucao
       RETURNING *
     `,
     [
@@ -218,6 +245,11 @@ const insertInstitution = async (institution) => {
       payload.schoolLevels ? JSON.stringify(payload.schoolLevels) : null,
       payload.schoolShifts ? JSON.stringify(payload.schoolShifts) : null,
       payload.infrastructure ? JSON.stringify(payload.infrastructure) : null,
+      asNullableNumber(payload.nota_portugues_saresp),
+      asNullableNumber(payload.nota_matematica_saresp),
+      asNullableNumber(payload.ano_base),
+      asNullableNumber(payload.taxa_aprovacao),
+      asNullableNumber(payload.taxa_evolucao),
     ]
   );
   return rowToInstitution(result.rows[0]);

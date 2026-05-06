@@ -56,6 +56,11 @@ export interface Institution {
   schoolLevels?: string[];
   schoolShifts?: string[];
   infrastructure?: string[];
+  nota_portugues_saresp?: number | null;
+  nota_matematica_saresp?: number | null;
+  ano_base?: number | null;
+  taxa_aprovacao?: number | null;
+  taxa_evolucao?: number | null;
 }
 
 export interface Activity {

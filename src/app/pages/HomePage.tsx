@@ -8,6 +8,7 @@ import { InstitutionCard } from '../components/InstitutionCard';
 import { Activity, Institution } from '../types';
 import { X } from 'lucide-react';
 import { api } from '../services/api';
+import { calculateScoreEducaCajamar, ScoreEducaResult } from '../utils/scoreEducaCajamar';
 
 interface HomePageProps {
   focusRequest?: {
@@ -15,6 +16,93 @@ interface HomePageProps {
     showDetails: boolean;
     requestedAt: number;
   } | null;
+}
+
+const formatNumber = (value: number) =>
+  value.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+
+const formatPercent = (value: number, showSign = false) =>
+  `${showSign && value > 0 ? '+' : ''}${formatNumber(value)}%`;
+
+const getScoreBarClass = (classification: ScoreEducaResult['classificacao_score']) => {
+  if (classification === 'Excelente') return 'bg-emerald-700';
+  if (classification === 'Boa') return 'bg-green-500';
+  if (classification === 'Regular') return 'bg-yellow-500';
+  return 'bg-red-500';
+};
+
+function SchoolPerformanceSection({ institution }: { institution: Institution }) {
+  const score = calculateScoreEducaCajamar(institution);
+  const hasBaseYear = institution.ano_base !== null && institution.ano_base !== undefined;
+
+  return (
+    <div className="pt-4 border-t border-border">
+      <h4 className="font-semibold text-foreground mb-3">Desempenho Escolar</h4>
+
+      {!score || !hasBaseYear ? (
+        <p className="text-sm text-muted-foreground">
+          Esta escola ainda não possui dados suficientes para cálculo do Score Educa Cajamar.
+        </p>
+      ) : (
+        <div className="space-y-3 text-sm">
+          <div className="bg-accent/20 rounded p-3 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-muted-foreground">Score Educa Cajamar</p>
+                <p className="text-xl font-semibold text-foreground">
+                  {score.score_educa_cajamar} / 1000
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-muted-foreground">Classificação</p>
+                <p className="font-medium text-foreground">{score.classificacao_score}</p>
+              </div>
+            </div>
+
+            <div className="h-2 bg-background rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full ${getScoreBarClass(score.classificacao_score)}`}
+                style={{ width: `${score.score_educa_cajamar / 10}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-muted-foreground">Português SARESP</p>
+              <p className="text-foreground">{formatNumber(Number(institution.nota_portugues_saresp))}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Matemática SARESP</p>
+              <p className="text-foreground">{formatNumber(Number(institution.nota_matematica_saresp))}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Ano-base</p>
+              <p className="text-foreground">{institution.ano_base}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Taxa de aprovação</p>
+              <p className="text-foreground">{formatPercent(Number(institution.taxa_aprovacao))}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Taxa de evolução</p>
+              <p className="text-foreground">{formatPercent(Number(institution.taxa_evolucao), true)}</p>
+            </div>
+          </div>
+
+          <div className="bg-accent/20 rounded p-3">
+            <p className="font-medium text-foreground mb-2">Composição do Score</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <p className="text-muted-foreground">Português: <span className="text-foreground">{score.pontos_portugues} / 300</span></p>
+              <p className="text-muted-foreground">Matemática: <span className="text-foreground">{score.pontos_matematica} / 300</span></p>
+              <p className="text-muted-foreground">Aprovação: <span className="text-foreground">{score.pontos_aprovacao} / 200</span></p>
+              <p className="text-muted-foreground">Evolução: <span className="text-foreground">{score.pontos_evolucao} / 200</span></p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function HomePage({ focusRequest }: HomePageProps) {
@@ -207,6 +295,10 @@ export function HomePage({ focusRequest }: HomePageProps) {
                     <p className="text-foreground">{selectedInstitution.responsible}</p>
                   </div>
                 </div>
+
+                {selectedInstitution.type === 'Escola' && (
+                  <SchoolPerformanceSection institution={selectedInstitution} />
+                )}
 
                 <div className="pt-4 border-t border-border">
                   <h4 className="font-semibold text-foreground mb-3">Atividades Disponíveis</h4>
