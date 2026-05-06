@@ -2,6 +2,7 @@
     "name": "educa-cajamar",
     "private": true,
     "version": "0.0.1",
+    "author": "Gabriel Domingues Fernandes",
     "type": "module",
     "scripts": {
         "dev": "concurrently -k \"npm:server\" \"vite\"",
