@@ -1,4 +1,4 @@
-import { MapPin, Search, Sparkles, User } from 'lucide-react';
+import { Search, Sparkles, User } from 'lucide-react';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -20,7 +20,11 @@ export function Header({ onSearch, onAIClick, currentPage = 'Mapa' }: HeaderProp
       <div className="flex items-center justify-between h-16 px-6">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
-            <MapPin className="w-6 h-6 text-primary" />
+            <img
+              src="/cajamar-logo.gif"
+              alt="Cajamar"
+              className="w-7 h-7 object-contain"
+            />
             <span className="text-xl font-semibold text-foreground">Educa Cajamar</span>
           </div>
 
