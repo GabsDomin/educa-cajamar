@@ -42,6 +42,7 @@ export interface Institution {
   phone: string;
   email?: string;
   imageUrl?: string;
+  google360Url?: string;
   description: string;
   openingHours: string;
   targetAudience: string;

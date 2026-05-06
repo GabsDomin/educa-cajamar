@@ -226,7 +226,16 @@ export function HomePage({ focusRequest }: HomePageProps) {
               </div>
 
               <div className="space-y-4">
-                {selectedInstitution.imageUrl && (
+                {selectedInstitution.google360Url ? (
+                  <iframe
+                    src={selectedInstitution.google360Url}
+                    title={`Vista 360 de ${selectedInstitution.name}`}
+                    className="w-full h-44 rounded-lg border border-border"
+                    loading="lazy"
+                    allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                ) : selectedInstitution.imageUrl && (
                   <img
                     src={selectedInstitution.imageUrl}
                     alt={selectedInstitution.name}
