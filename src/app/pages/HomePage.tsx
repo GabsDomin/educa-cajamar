@@ -230,7 +230,7 @@ export function HomePage({ focusRequest }: HomePageProps) {
                   <iframe
                     src={selectedInstitution.google360Url}
                     title={`Vista 360 de ${selectedInstitution.name}`}
-                    className="w-full h-40 sm:h-44 md:h-48 rounded-lg border border-border"
+                    className="w-full h-52 sm:h-56 md:h-60 rounded-lg border border-border"
                     loading="lazy"
                     allowFullScreen
                     referrerPolicy="no-referrer-when-downgrade"
