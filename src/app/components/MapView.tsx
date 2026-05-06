@@ -82,7 +82,9 @@ export function MapView({ institutions, onMarkerClick, selectedInstitution }: Ma
       points.push([institution.lat, institution.lng]);
     });
 
-    if (points.length > 0) {
+    if (selectedInstitution?.lat && selectedInstitution?.lng) {
+      map.setView([selectedInstitution.lat, selectedInstitution.lng], 15, { animate: true });
+    } else if (points.length > 0) {
       map.fitBounds(points, { padding: [80, 80], maxZoom: 15 });
     } else {
       map.setView([-23.3558, -46.8762], 13);

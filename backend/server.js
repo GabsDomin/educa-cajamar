@@ -40,6 +40,7 @@ const rowToInstitution = (row) => ({
   state: row.state,
   phone: row.phone,
   email: row.email,
+  imageUrl: row.image_url || undefined,
   description: row.description,
   openingHours: row.opening_hours,
   targetAudience: row.target_audience,
@@ -92,6 +93,7 @@ const createSchema = async () => {
       state TEXT NOT NULL DEFAULT 'SP',
       phone TEXT NOT NULL,
       email TEXT,
+      image_url TEXT,
       description TEXT NOT NULL,
       opening_hours TEXT NOT NULL,
       target_audience TEXT NOT NULL,
@@ -129,6 +131,11 @@ const createSchema = async () => {
       neighborhood TEXT NOT NULL
     );
   `);
+
+  await pool.query(`
+    ALTER TABLE institutions
+      ADD COLUMN IF NOT EXISTS image_url TEXT;
+  `);
 };
 
 const insertInstitution = async (institution) => {
@@ -144,15 +151,15 @@ const insertInstitution = async (institution) => {
     `
       INSERT INTO institutions (
         id, name, type, rating, address, street, number, neighborhood, city, state,
-        phone, email, description, opening_hours, target_audience, is_free,
+        phone, email, image_url, description, opening_hours, target_audience, is_free,
         accessibility, responsible, status, last_update, lat, lng, school_network,
         school_levels, school_shifts, infrastructure
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16,
-        $17, $18, $19, $20, $21, $22, $23,
-        $24, $25, $26
+        $11, $12, $13, $14, $15, $16, $17,
+        $18, $19, $20, $21, $22, $23, $24,
+        $25, $26, $27
       )
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
@@ -166,6 +173,7 @@ const insertInstitution = async (institution) => {
         state = EXCLUDED.state,
         phone = EXCLUDED.phone,
         email = EXCLUDED.email,
+        image_url = EXCLUDED.image_url,
         description = EXCLUDED.description,
         opening_hours = EXCLUDED.opening_hours,
         target_audience = EXCLUDED.target_audience,
@@ -195,6 +203,7 @@ const insertInstitution = async (institution) => {
       payload.state,
       payload.phone,
       payload.email || null,
+      payload.imageUrl || null,
       payload.description,
       payload.openingHours,
       payload.targetAudience,

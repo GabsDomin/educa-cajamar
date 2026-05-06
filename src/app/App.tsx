@@ -6,9 +6,24 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { AdminPage } from './pages/AdminPage';
 
 type Page = 'home' | 'activities' | 'institutions' | 'analytics' | 'admin';
+type InstitutionFocusRequest = {
+  id: string;
+  showDetails: boolean;
+  requestedAt: number;
+};
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [institutionFocusRequest, setInstitutionFocusRequest] = useState<InstitutionFocusRequest | null>(null);
+
+  const openInstitutionOnMap = (id: string, showDetails = true) => {
+    setInstitutionFocusRequest({
+      id,
+      showDetails,
+      requestedAt: Date.now(),
+    });
+    setCurrentPage('home');
+  };
 
   useEffect(() => {
     const handleNavigation = (event: MouseEvent) => {
@@ -33,9 +48,16 @@ export default function App() {
 
   return (
     <div className="size-full">
-      {currentPage === 'home' && <HomePage />}
-      {currentPage === 'activities' && <ActivitiesPage />}
-      {currentPage === 'institutions' && <InstitutionsPage />}
+      {currentPage === 'home' && <HomePage focusRequest={institutionFocusRequest} />}
+      {currentPage === 'activities' && (
+        <ActivitiesPage onViewInstitution={(id) => openInstitutionOnMap(id, true)} />
+      )}
+      {currentPage === 'institutions' && (
+        <InstitutionsPage
+          onViewDetails={(id) => openInstitutionOnMap(id, true)}
+          onViewMap={(id) => openInstitutionOnMap(id, false)}
+        />
+      )}
       {currentPage === 'analytics' && <AnalyticsPage />}
       {currentPage === 'admin' && <AdminPage />}
     </div>

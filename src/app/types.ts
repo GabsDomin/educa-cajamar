@@ -41,6 +41,7 @@ export interface Institution {
   state: string;
   phone: string;
   email?: string;
+  imageUrl?: string;
   description: string;
   openingHours: string;
   targetAudience: string;

@@ -9,7 +9,15 @@ import { Activity, Institution } from '../types';
 import { X } from 'lucide-react';
 import { api } from '../services/api';
 
-export function HomePage() {
+interface HomePageProps {
+  focusRequest?: {
+    id: string;
+    showDetails: boolean;
+    requestedAt: number;
+  } | null;
+}
+
+export function HomePage({ focusRequest }: HomePageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('Todas');
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
@@ -26,6 +34,19 @@ export function HomePage() {
       })
       .catch((err) => console.error('Falha ao carregar dados', err));
   }, []);
+
+  useEffect(() => {
+    if (!focusRequest || institutions.length === 0) return;
+
+    const institution = institutions.find((item) => item.id === focusRequest.id);
+    if (!institution) return;
+
+    setSearchQuery('');
+    setActiveFilter('Todas');
+    setSelectedInstitution(institution);
+    setShowDetail(focusRequest.showDetails);
+    setShowAI(false);
+  }, [focusRequest, institutions]);
 
   const filters = [
     'Todas',
@@ -117,6 +138,14 @@ export function HomePage() {
               </div>
 
               <div className="space-y-4">
+                {selectedInstitution.imageUrl && (
+                  <img
+                    src={selectedInstitution.imageUrl}
+                    alt={selectedInstitution.name}
+                    className="w-full h-44 object-cover rounded-lg border border-border"
+                  />
+                )}
+
                 <div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">
                     {selectedInstitution.name}
@@ -224,7 +253,10 @@ export function HomePage() {
                     }}
                     onViewMap={(id) => {
                       const inst = institutions.find((i) => i.id === id);
-                      if (inst) setSelectedInstitution(inst);
+                      if (inst) {
+                        setSelectedInstitution(inst);
+                        setShowDetail(false);
+                      }
                     }}
                   />
                 ))}

@@ -6,7 +6,12 @@ import { InstitutionCard } from '../components/InstitutionCard';
 import { Institution } from '../types';
 import { api } from '../services/api';
 
-export function InstitutionsPage() {
+interface InstitutionsPageProps {
+  onViewDetails?: (id: string) => void;
+  onViewMap?: (id: string) => void;
+}
+
+export function InstitutionsPage({ onViewDetails, onViewMap }: InstitutionsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('Todas');
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('Todos');
@@ -103,7 +108,12 @@ export function InstitutionsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredInstitutions.map((institution) => (
-            <InstitutionCard key={institution.id} institution={institution} />
+            <InstitutionCard
+              key={institution.id}
+              institution={institution}
+              onViewDetails={onViewDetails}
+              onViewMap={onViewMap}
+            />
           ))}
         </div>
 
