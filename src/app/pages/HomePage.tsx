@@ -168,17 +168,17 @@ export function HomePage({ focusRequest }: HomePageProps) {
   }), [institutions, searchQuery, activeFilter]);
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-[100dvh] flex flex-col bg-background">
       <Header
         currentPage="Mapa"
         onAIClick={() => setShowAI(!showAI)}
       />
 
-      <div className="flex-1 flex pt-16 overflow-hidden">
-        <div className="flex-1 flex flex-col p-4">
+      <div className="flex-1 flex flex-col md:flex-row pt-14 md:pt-16 overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col p-3 md:p-4">
           <div className="mb-4 space-y-3">
             <div className="flex flex-col gap-3">
-              <h1 className="text-2xl font-semibold text-foreground">
+              <h1 className="text-xl md:text-2xl font-semibold text-foreground">
                 Encontre escolas e atividades educacionais em Cajamar
               </h1>
               <p className="text-muted-foreground">
@@ -195,7 +195,7 @@ export function HomePage({ focusRequest }: HomePageProps) {
             />
           </div>
 
-          <div className="flex-1 rounded-lg overflow-hidden">
+          <div className="flex-1 min-h-[45dvh] md:min-h-0 rounded-lg overflow-hidden">
             <MapView
               institutions={filteredInstitutions}
               selectedInstitution={selectedInstitution}
@@ -207,7 +207,7 @@ export function HomePage({ focusRequest }: HomePageProps) {
           </div>
         </div>
 
-        <div className="w-96 flex flex-col gap-4 p-4 border-l border-border bg-card/30 overflow-y-auto">
+        <div className="w-full md:w-96 h-[42dvh] md:h-auto flex flex-col gap-4 p-3 md:p-4 pb-24 md:pb-4 border-t md:border-t-0 md:border-l border-border bg-card/30 overflow-y-auto">
           {showAI ? (
             <AIAssistant
               onClose={() => setShowAI(false)}

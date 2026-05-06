@@ -97,9 +97,9 @@ export function AnalyticsPage() {
     <div className="min-h-screen bg-background">
       <Header currentPage="Analítico" />
 
-      <div className="pt-20 px-6 pb-8 max-w-7xl mx-auto">
+      <div className="pt-16 md:pt-20 px-4 md:px-6 pb-24 md:pb-8 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-semibold text-foreground mb-2">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">
             Painel Analítico
           </h1>
           <p className="text-muted-foreground">

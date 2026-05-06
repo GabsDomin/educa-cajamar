@@ -86,12 +86,12 @@ export function AdminPage() {
     <div className="min-h-screen bg-background">
       <Header currentPage="Admin" />
 
-      <div className="flex pt-16">
-        <aside className="w-64 border-r border-border bg-card/30 min-h-screen p-4">
-          <nav className="space-y-1">
+      <div className="flex flex-col md:flex-row pt-14 md:pt-16 pb-20 md:pb-0">
+        <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-card/30 md:min-h-screen p-3 md:p-4">
+          <nav className="flex md:block gap-2 md:space-y-1 overflow-x-auto">
             <button
               onClick={() => setActiveSection('overview')}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+              className={`flex-shrink-0 md:w-full text-left px-4 py-3 rounded-lg transition-colors ${
                 activeSection === 'overview'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-foreground hover:bg-accent'
@@ -102,7 +102,7 @@ export function AdminPage() {
 
             <button
               onClick={() => setActiveSection('institutions')}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+              className={`flex-shrink-0 md:w-full text-left px-4 py-3 rounded-lg transition-colors ${
                 activeSection === 'institutions'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-foreground hover:bg-accent'
@@ -113,7 +113,7 @@ export function AdminPage() {
 
             <button
               onClick={() => setActiveSection('activities')}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+              className={`flex-shrink-0 md:w-full text-left px-4 py-3 rounded-lg transition-colors ${
                 activeSection === 'activities'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-foreground hover:bg-accent'
@@ -124,10 +124,10 @@ export function AdminPage() {
           </nav>
         </aside>
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 md:p-6 min-w-0">
           {activeSection === 'overview' && (
             <div>
-              <h1 className="text-3xl font-semibold text-foreground mb-6">
+              <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-6">
                 Painel Administrativo
               </h1>
 
@@ -183,8 +183,8 @@ export function AdminPage() {
 
           {activeSection === 'institutions' && (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-semibold text-foreground">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
                   Gerenciar Instituições
                 </h1>
                 <button
@@ -212,8 +212,8 @@ export function AdminPage() {
                 </div>
               </div>
 
-              <div className="bg-card border border-border rounded-lg overflow-hidden">
-                <table className="w-full">
+              <div className="bg-card border border-border rounded-lg overflow-x-auto">
+                <table className="w-full min-w-[760px]">
                   <thead className="bg-accent/20 border-b border-border">
                     <tr>
                       <th className="text-left px-4 py-3 text-sm font-medium text-foreground">Nome</th>
@@ -284,8 +284,8 @@ export function AdminPage() {
 
           {activeSection === 'activities' && (
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-semibold text-foreground">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
                   Gerenciar Atividades
                 </h1>
                 <button
@@ -313,8 +313,8 @@ export function AdminPage() {
                 </div>
               </div>
 
-              <div className="bg-card border border-border rounded-lg overflow-hidden">
-                <table className="w-full">
+              <div className="bg-card border border-border rounded-lg overflow-x-auto">
+                <table className="w-full min-w-[860px]">
                   <thead className="bg-accent/20 border-b border-border">
                     <tr>
                       <th className="text-left px-4 py-3 text-sm font-medium text-foreground">Nome</th>

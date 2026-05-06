@@ -28,7 +28,7 @@ export function ActivityCard({ activity, onViewInstitution, onViewMap }: Activit
   return (
     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-all">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-foreground mb-2">{activity.name}</h3>
           <span className={`inline-block px-3 py-1 rounded-full text-xs ${colorClass}`}>
             {activity.category}
@@ -59,7 +59,7 @@ export function ActivityCard({ activity, onViewInstitution, onViewMap }: Activit
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-border">
         <div className="flex items-center gap-2">
           {activity.status === 'Aberta' ? (
             <CheckCircle2 className="w-4 h-4 text-accent" />

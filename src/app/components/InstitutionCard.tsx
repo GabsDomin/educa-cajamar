@@ -14,7 +14,7 @@ export function InstitutionCard({ institution, onViewDetails, onViewMap }: Insti
   return (
     <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-all cursor-pointer">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <div
               className="w-3 h-3 rounded-full"
@@ -34,7 +34,7 @@ export function InstitutionCard({ institution, onViewDetails, onViewMap }: Insti
       <div className="space-y-2 mb-4 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <MapPin className="w-4 h-4" />
-          <span>{institution.neighborhood} • {institution.street}</span>
+          <span className="min-w-0 break-words">{institution.neighborhood} • {institution.street}</span>
         </div>
 
         <div className="flex items-center gap-2 text-muted-foreground">
