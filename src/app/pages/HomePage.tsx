@@ -218,7 +218,10 @@ export function HomePage({ focusRequest }: HomePageProps) {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-foreground">Detalhes da Instituição</h3>
                 <button
-                  onClick={() => setShowDetail(false)}
+                  onClick={() => {
+                    setShowDetail(false);
+                    setSelectedInstitution(null);
+                  }}
                   className="p-1 hover:bg-accent rounded transition-colors"
                 >
                   <X className="w-5 h-5" />
