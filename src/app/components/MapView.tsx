@@ -53,11 +53,11 @@ export function MapView({ institutions, onMarkerClick, selectedInstitution }: Ma
       const isSelected = selectedInstitution?.id === institution.id;
 
       const marker = L.circleMarker([institution.lat, institution.lng], {
-        radius: isSelected ? 10 : 7,
-        weight: 2,
-        color: '#ffffff',
-        fillColor: color,
-        fillOpacity: 0.95
+        radius: isSelected ? 12 : 7,
+        weight: isSelected ? 4 : 2,
+        color: isSelected ? '#facc15' : '#ffffff',
+        fillColor: isSelected ? '#f59e0b' : color,
+        fillOpacity: isSelected ? 1 : 0.95
       });
 
       marker.bindTooltip(
