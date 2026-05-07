@@ -2,13 +2,48 @@
 
 Projeto desenvolvido por **Gabriel Domingues Fernandes**.
 
-O Educa Cajamar é uma aplicação web para mapear instituições, escolas e atividades educacionais no município de Cajamar/SP. A plataforma permite consultar unidades no mapa, visualizar detalhes das instituições, encontrar atividades, acompanhar indicadores por bairro e administrar cadastros.
+O **Educa Cajamar** é uma aplicação web para mapear escolas, instituições públicas, espaços culturais, atividades educacionais e oportunidades gratuitas no município de Cajamar/SP.
+
+A proposta do sistema é reunir, em um único lugar, informações úteis para a população: onde ficam as instituições, quais atividades existem, quais bairros possuem maior cobertura educacional, quais escolas já possuem dados de desempenho e como encontrar oportunidades próximas.
+
+## Sumário
+
+- [Objetivo](#objetivo)
+- [Tecnologias](#tecnologias)
+- [Arquitetura](#arquitetura)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Funcionalidades](#funcionalidades)
+- [Mapa e Detalhamento](#mapa-e-detalhamento)
+- [Imagens e Google 360](#imagens-e-google-360)
+- [Score Educa Cajamar](#score-educa-cajamar)
+- [Aba Analítico](#aba-analítico)
+- [Assistente Educa com IA](#assistente-educa-com-ia)
+- [Banco de Dados](#banco-de-dados)
+- [API](#api)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Como Rodar Localmente](#como-rodar-localmente)
+- [Deploy na Railway](#deploy-na-railway)
+- [Como Alimentar Dados no Supabase](#como-alimentar-dados-no-supabase)
+- [Manutenção](#manutenção)
+- [Autor](#autor)
 
 ## Objetivo
 
-Centralizar informações educacionais de Cajamar em uma interface simples de consulta, ajudando moradores, estudantes, famílias e gestores a encontrar escolas, centros culturais, atividades gratuitas e oportunidades próximas.
+O objetivo do Educa Cajamar é facilitar o acesso público a informações educacionais e culturais do município.
+
+O sistema ajuda a responder perguntas como:
+
+- Quais escolas existem em determinado bairro?
+- Quais atividades gratuitas estão disponíveis?
+- Onde fica uma instituição?
+- Qual bairro possui maior ou menor cobertura educacional?
+- Quais escolas possuem dados de desempenho?
+- Qual escola tem melhor Score Educa Cajamar?
+- Quais atividades ainda possuem vagas?
 
 ## Tecnologias
+
+### Frontend
 
 - React
 - TypeScript
@@ -16,110 +51,182 @@ Centralizar informações educacionais de Cajamar em uma interface simples de co
 - Tailwind CSS
 - Leaflet
 - Recharts
+- Lucide React
+
+### Backend
+
+- Node.js
 - Express
 - PostgreSQL
-- Supabase
-- Railway
+- `pg`
+- Nanoid
 
-## Estrutura Do Projeto
+### Banco e Deploy
+
+- Supabase Postgres
+- Railway
+- GitHub
+
+### IA
+
+- Google Gemini API
+- Rota backend própria para proteger a chave
+
+## Arquitetura
+
+O projeto funciona como uma aplicação full-stack simples:
+
+```txt
+Usuário
+  ↓
+React/Vite
+  ↓
+API Express
+  ↓
+Supabase PostgreSQL
+```
+
+Para IA:
+
+```txt
+Usuário pergunta no site
+  ↓
+Frontend chama POST /api/ai/ask
+  ↓
+Backend consulta Supabase
+  ↓
+Backend monta contexto público
+  ↓
+Backend chama Gemini
+  ↓
+Resposta volta para o site
+```
+
+Importante: a chave da Gemini e a conexão com o banco ficam somente no backend/Railway. Elas não são expostas no navegador.
+
+## Estrutura do Projeto
 
 ```txt
 backend/
-  db.json              Dados iniciais usados somente quando o banco está vazio
-  server.js            API Express, conexão PostgreSQL e servidor de produção
+  db.json
+  server.js
 
 public/
-  cajamar-logo.gif     Favicon do projeto
+  cajamar-logo.gif
 
 src/
   app/
-    components/        Componentes reutilizáveis da interface
-    data/              Helpers e dados auxiliares
-    pages/             Telas principais do sistema
-    services/          Cliente HTTP da API
-    utils/             Funções utilitárias
-    types.ts           Tipagens principais
-    App.tsx            Controle simples de navegação interna
-  main.tsx             Entrada do React
-  styles/              Arquivos de estilo global
+    components/
+      ActivityCard.tsx
+      ActivityForm.tsx
+      AIAssistant.tsx
+      FilterChips.tsx
+      Header.tsx
+      InstitutionCard.tsx
+      InstitutionForm.tsx
+      KPICard.tsx
+      MapView.tsx
+      SearchBar.tsx
+    data/
+      mockData.ts
+    pages/
+      ActivitiesPage.tsx
+      AdminPage.tsx
+      AnalyticsPage.tsx
+      HomePage.tsx
+      InstitutionsPage.tsx
+    services/
+      api.ts
+    utils/
+      scoreEducaCajamar.ts
+    App.tsx
+    types.ts
+  main.tsx
+  styles/
 
-railway.json           Configuração de build/deploy na Railway
-package.json           Scripts, dependências e metadados do projeto
+railway.json
+package.json
+README.md
 ```
 
 ## Funcionalidades
 
 ### Mapa
 
-A tela principal exibe um mapa de Cajamar com marcadores para instituições cadastradas.
+A tela principal apresenta o mapa de Cajamar com marcadores das instituições cadastradas.
 
 Recursos:
 
 - busca por escola, bairro, rua ou atividade;
 - filtros por categoria;
-- marcador colorido conforme o tipo da instituição;
-- seleção de instituição no mapa;
-- painel lateral com detalhes da unidade;
-- botão de detalhes nos cards;
-- foco automático no mapa ao selecionar uma unidade.
+- marcadores coloridos por tipo de instituição;
+- destaque visual do marcador selecionado;
+- zoom automático em nível de rua ao selecionar uma instituição;
+- centralização da localização selecionada no mapa;
+- retorno ao enquadramento geral ao fechar o detalhamento;
+- painel lateral com resultados e detalhes.
 
 ### Instituições
 
-Lista instituições educacionais, culturais, esportivas e sociais.
+Tela para listar instituições cadastradas.
 
 Recursos:
 
 - busca por nome, tipo ou bairro;
-- filtro por tipo de instituição;
+- filtro por tipo;
 - filtro por bairro;
-- botão **Ver detalhes**, que abre a unidade no mapa com o detalhamento;
-- botão de localização, que abre o mapa focado na instituição.
+- botão **Ver detalhes**;
+- botão de localização;
+- integração com mapa para abrir a instituição selecionada.
 
 ### Atividades
 
-Lista atividades educacionais e culturais cadastradas.
+Tela para listar atividades educacionais, culturais e esportivas.
 
 Recursos:
 
 - busca por atividade, categoria ou bairro;
 - filtros por categoria;
 - filtro por bairro;
-- botão **Ver instituição**, que abre a instituição relacionada no mapa.
-
-### Analítico
-
-Exibe indicadores e gráficos com base nos dados cadastrados.
-
-Indicadores tratados:
-
-- total de instituições;
-- atividades;
-- bairros atendidos;
-- avaliação média;
-- distribuição por bairro;
-- distribuição por tipo.
+- indicação de vagas;
+- indicação de atividade gratuita;
+- botão **Ver instituição**.
 
 ### Administração
 
-Área para gerenciar instituições e atividades.
+Tela para gerenciar cadastros.
 
 Recursos:
 
-- cadastro de instituições;
-- edição de instituições;
+- visão geral;
+- cadastro e edição de instituições;
+- cadastro e edição de atividades;
 - alteração de status;
-- cadastro de atividades;
-- edição de atividades;
-- alteração de status das atividades.
+- busca administrativa;
+- tabelas com rolagem horizontal em telas menores.
 
-## Detalhamento Da Instituição
+## Responsividade
 
-O painel de detalhes da instituição fica na tela de mapa.
+O sistema foi adaptado para desktop, tablet e celular.
 
-Ele exibe:
+Adaptações principais:
 
-- imagem da instituição, quando existir `image_url`;
-- nome;
+- header mais compacto em telas menores;
+- navegação inferior no celular;
+- chips de filtro com rolagem horizontal no mobile;
+- mapa e painel lateral empilhados no celular;
+- tabelas administrativas com rolagem lateral;
+- títulos e espaçamentos ajustados por breakpoint;
+- preservação do visual original do projeto.
+
+## Mapa e Detalhamento
+
+O detalhamento da instituição fica na tela do mapa.
+
+Ele pode exibir:
+
+- mídia no topo;
+- nome da instituição;
 - tipo;
 - avaliação;
 - endereço;
@@ -131,20 +238,55 @@ Ele exibe:
 - gratuidade;
 - acessibilidade;
 - responsável;
-- atividades disponíveis;
-- desempenho escolar, apenas para escolas.
+- desempenho escolar, somente para escolas;
+- atividades disponíveis.
 
-## Imagem Da Instituição
+### Seleção no mapa
 
-Cada instituição pode ter uma imagem exibida no topo do detalhamento.
+Quando uma instituição é selecionada:
 
-Campo no banco:
+- o marcador muda para destaque laranja/amarelo;
+- o marcador fica maior;
+- o mapa centraliza a coordenada;
+- o mapa aproxima em nível de rua.
 
-```sql
-image_url TEXT
+Quando o detalhamento é fechado:
+
+- o marcador volta à cor original;
+- a seleção é removida;
+- o mapa volta ao enquadramento geral das unidades filtradas.
+
+## Imagens e Google 360
+
+O sistema suporta duas formas de mídia no topo do detalhamento:
+
+1. imagem estática;
+2. Google Street View/Maps 360 incorporado.
+
+### Prioridade de exibição
+
+O sistema usa a seguinte ordem:
+
+```txt
+1. google_360_url
+2. image_url
+3. sem mídia
 ```
 
-Exemplo para preencher:
+Ou seja:
+
+- se `google_360_url` estiver preenchido, o sistema mostra o 360;
+- se não houver `google_360_url`, mas houver `image_url`, mostra a imagem;
+- se nenhum campo estiver preenchido, não mostra mídia.
+
+### Campos
+
+```txt
+image_url
+google_360_url
+```
+
+### Exemplo de imagem
 
 ```sql
 UPDATE institutions
@@ -152,23 +294,38 @@ SET image_url = 'https://url-da-imagem-aqui'
 WHERE id = 'id-da-instituicao';
 ```
 
-Para consultar:
+### Exemplo de Google 360
+
+No Google Maps:
+
+1. abra a instituição;
+2. entre no Street View;
+3. clique em compartilhar;
+4. escolha incorporar mapa;
+5. copie somente o valor do `src`;
+6. salve esse valor em `google_360_url`.
 
 ```sql
-SELECT id, name, image_url
-FROM institutions
-ORDER BY name;
+UPDATE institutions
+SET google_360_url = 'https://www.google.com/maps/embed?...'
+WHERE id = 'id-da-instituicao';
 ```
+
+Observação: os controles internos do Google, como bússola, zoom, nome da rua e logo, pertencem ao iframe do Google e não podem ser removidos por CSS do projeto.
 
 ## Score Educa Cajamar
 
-O **Score Educa Cajamar** aparece somente no detalhamento de instituições do tipo `Escola`.
+O **Score Educa Cajamar** é um indicador calculado automaticamente para instituições do tipo `Escola`.
 
-Se a instituição não for escola, a seção não é exibida.
+Ele aparece somente no detalhamento de escolas.
 
-### Campos Usados
+Se a instituição não for escola:
 
-Campos esperados no registro da instituição:
+- a seção não aparece;
+- nenhum score é calculado;
+- nenhum dado escolar é exibido.
+
+### Campos usados
 
 ```txt
 nota_portugues_saresp
@@ -178,22 +335,24 @@ taxa_aprovacao
 taxa_evolucao
 ```
 
-O score não é preenchido manualmente. Ele é calculado automaticamente no frontend pela função:
+### Arquivo da regra
 
 ```txt
 src/app/utils/scoreEducaCajamar.ts
 ```
 
-### Regra De Cálculo
+### Cálculo
 
 O score vai de 0 a 1000 pontos:
 
-- Português: até 300 pontos;
-- Matemática: até 300 pontos;
-- Taxa de aprovação: até 200 pontos;
-- Taxa de evolução: até 200 pontos.
+```txt
+Português: até 300 pontos
+Matemática: até 300 pontos
+Aprovação: até 200 pontos
+Evolução: até 200 pontos
+```
 
-Cálculo:
+Fórmula:
 
 ```txt
 pontos_portugues = nota_portugues_saresp * 30
@@ -201,7 +360,7 @@ pontos_matematica = nota_matematica_saresp * 30
 pontos_aprovacao = taxa_aprovacao * 2
 ```
 
-Pontuação da evolução:
+Evolução:
 
 ```txt
 taxa_evolucao >= 10       => 200 pontos
@@ -221,29 +380,151 @@ Classificação:
 0 a 499    => Em atenção
 ```
 
-Se faltar algum dado obrigatório, o sistema não calcula score falso e exibe a mensagem:
+Se algum dado obrigatório estiver ausente, o sistema mostra:
 
 ```txt
 Esta escola ainda não possui dados suficientes para cálculo do Score Educa Cajamar.
 ```
 
-## Banco De Dados
+## Aba Analítico
 
-O projeto usa PostgreSQL via Supabase.
+A aba **Analítico** é dinâmica e usa dados do Supabase por meio da API.
 
-A conexão é feita pela variável de ambiente:
-
-```txt
-DATABASE_URL
-```
-
-O backend também aceita:
+Endpoints usados:
 
 ```txt
-DATABASE_SSL=false
+GET /api/institutions
+GET /api/activities
+GET /api/neighborhoods
 ```
 
-Somente use `DATABASE_SSL=false` em ambiente local se necessário. Em produção, o padrão é usar SSL.
+### Recursos atuais
+
+- filtros por bairro;
+- busca por bairro, instituição, tipo ou atividade;
+- total de escolas encontradas;
+- atividades abertas;
+- vagas disponíveis;
+- percentual de atividades gratuitas;
+- score médio escolar;
+- bairro com maior cobertura educacional;
+- melhor Score Educa Cajamar;
+- instituição mais avaliada;
+- gráfico de oferta por tipo de instituição;
+- gráfico de atividades por categoria;
+- gráfico de vagas abertas por categoria;
+- gráfico de cobertura educacional por bairro;
+- bairros que merecem atenção;
+- ranking do Score Educa Cajamar;
+- atividades gratuitas com vagas;
+- escolas com dados escolares completos;
+- escolas sem score.
+
+### Dados dinâmicos
+
+A aba muda conforme o banco muda.
+
+Ela depende principalmente de:
+
+- instituições cadastradas;
+- atividades cadastradas;
+- bairros;
+- vagas;
+- status das atividades;
+- gratuidade;
+- notas SARESP;
+- aprovação;
+- evolução;
+- ano-base.
+
+## Assistente Educa com IA
+
+O botão **Perguntar à IA** usa a Gemini API por meio do backend.
+
+### Fluxo
+
+```txt
+Usuário pergunta
+  ↓
+Frontend chama POST /api/ai/ask
+  ↓
+Backend consulta Supabase
+  ↓
+Backend monta contexto público
+  ↓
+Backend chama Gemini
+  ↓
+Resposta volta para o frontend
+```
+
+### Segurança
+
+A chave da Gemini fica somente na Railway:
+
+```txt
+GEMINI_API_KEY
+```
+
+Ela não fica no React e não aparece no navegador.
+
+### Modelo
+
+O backend usa por padrão:
+
+```txt
+gemini-2.5-flash-lite
+```
+
+Também é possível configurar outro modelo com:
+
+```txt
+GEMINI_MODEL
+```
+
+### Rota
+
+```txt
+POST /api/ai/ask
+```
+
+Body:
+
+```json
+{
+  "question": "Quais atividades gratuitas estão abertas?"
+}
+```
+
+Resposta:
+
+```json
+{
+  "answer": "Resposta gerada com base nos dados públicos do Educa Cajamar."
+}
+```
+
+### Limites e fallback
+
+O backend:
+
+- exige pergunta preenchida;
+- limita a pergunta a 500 caracteres;
+- envia apenas um resumo público do banco;
+- instrui a IA a não inventar dados;
+- retorna mensagem amigável se a IA falhar.
+
+Exemplos de perguntas:
+
+```txt
+Quais escolas existem no Jordanésia?
+Quais atividades gratuitas estão abertas?
+Qual escola tem melhor Score Educa Cajamar?
+Quais bairros têm menos cobertura educacional?
+```
+
+## Banco de Dados
+
+O banco usado é PostgreSQL via Supabase.
 
 ### Tabela institutions
 
@@ -263,6 +544,7 @@ state
 phone
 email
 image_url
+google_360_url
 description
 opening_hours
 target_audience
@@ -309,11 +591,11 @@ instructor
 neighborhood
 ```
 
-### Criação Automática De Colunas
+### Migração automática
 
-Ao iniciar, o backend executa `CREATE TABLE IF NOT EXISTS` e `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` para manter compatibilidade com bancos já existentes.
+O backend executa comandos `CREATE TABLE IF NOT EXISTS` e `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`.
 
-Isso evita quebrar dados antigos quando novos campos são adicionados.
+Isso permite adicionar novos campos sem quebrar bancos já existentes.
 
 ## API
 
@@ -343,6 +625,36 @@ PATCH  /api/activities/:id/status
 GET /api/neighborhoods
 ```
 
+### IA
+
+```txt
+POST /api/ai/ask
+```
+
+## Variáveis de Ambiente
+
+### Obrigatórias
+
+```txt
+DATABASE_URL
+```
+
+### Recomendadas
+
+```txt
+GEMINI_API_KEY
+```
+
+### Opcionais
+
+```txt
+DATABASE_SSL=false
+GEMINI_MODEL=gemini-2.5-flash-lite
+PORT=3001
+```
+
+Observação: em produção, normalmente não é necessário definir `DATABASE_SSL=false`.
+
 ## Como Rodar Localmente
 
 ### 1. Instalar dependências
@@ -351,12 +663,13 @@ GET /api/neighborhoods
 npm install
 ```
 
-### 2. Configurar variáveis de ambiente
+### 2. Configurar variáveis
 
-Crie um arquivo `.env` local ou configure as variáveis no terminal:
+Crie um `.env` local ou defina no terminal:
 
 ```txt
 DATABASE_URL=postgresql://...
+GEMINI_API_KEY=...
 ```
 
 ### 3. Rodar em desenvolvimento
@@ -370,23 +683,21 @@ Esse comando inicia:
 - backend Express;
 - frontend Vite.
 
-### 4. Gerar build de produção
+### 4. Gerar build
 
 ```bash
 npm run build
 ```
 
-### 5. Rodar produção local
+### 5. Rodar em produção local
 
 ```bash
 npm start
 ```
 
-## Deploy
+## Deploy na Railway
 
-O projeto está preparado para deploy na Railway.
-
-Arquivo de configuração:
+O projeto está configurado para Railway pelo arquivo:
 
 ```txt
 railway.json
@@ -404,19 +715,42 @@ Start:
 npm start
 ```
 
-Variável obrigatória na Railway:
+Variáveis necessárias na Railway:
 
 ```txt
 DATABASE_URL
+GEMINI_API_KEY
 ```
 
-## Supabase
+Depois de alterar variáveis, faça redeploy se a Railway não reiniciar automaticamente.
 
-O Supabase é usado como banco PostgreSQL.
+## Como Alimentar Dados no Supabase
 
-Para alimentar dados manualmente, use o **SQL Editor** do Supabase.
+### Listar instituições
 
-Exemplo de atualização dos dados escolares:
+```sql
+SELECT id, name, type, neighborhood
+FROM institutions
+ORDER BY name;
+```
+
+### Inserir imagem
+
+```sql
+UPDATE institutions
+SET image_url = 'https://url-da-imagem-aqui'
+WHERE id = 'id-da-instituicao';
+```
+
+### Inserir Google 360
+
+```sql
+UPDATE institutions
+SET google_360_url = 'https://www.google.com/maps/embed?...'
+WHERE id = 'id-da-instituicao';
+```
+
+### Inserir dados escolares
 
 ```sql
 UPDATE institutions
@@ -429,7 +763,7 @@ SET
 WHERE id = 'id-da-escola';
 ```
 
-Exemplo para listar escolas:
+### Consultar escolas com dados de score
 
 ```sql
 SELECT
@@ -445,6 +779,16 @@ WHERE type = 'Escola'
 ORDER BY name;
 ```
 
+### Atualizar vagas de atividade
+
+```sql
+UPDATE activities
+SET available_slots = 20,
+    total_slots = 30,
+    status = 'Aberta'
+WHERE id = 'id-da-atividade';
+```
+
 ## Scripts
 
 ```txt
@@ -455,14 +799,36 @@ npm run server    Inicia somente o backend
 npm start         Inicia o servidor em produção
 ```
 
-## Observações De Manutenção
+## Manutenção
 
-- Não versionar senhas reais.
-- Não colocar `DATABASE_URL` no código.
-- Usar variáveis de ambiente na Railway.
-- Manter alterações de layout sempre pequenas e compatíveis com o padrão visual atual.
-- Antes de mexer em banco, conferir os nomes das colunas no Supabase.
-- O arquivo `backend/db.json` é usado apenas para seed inicial quando a tabela de instituições está vazia.
+Boas práticas:
+
+- não versionar senhas;
+- não colocar `DATABASE_URL` no código;
+- não colocar `GEMINI_API_KEY` no frontend;
+- manter chaves apenas em variáveis de ambiente;
+- revisar logs da Railway quando IA ou banco falharem;
+- alimentar o Supabase com dados completos para melhorar a aba Analítico;
+- manter mudanças visuais compatíveis com o estilo atual;
+- usar `image_url` como fallback quando não houver Google 360;
+- usar `google_360_url` somente com URL de embed do Google;
+- preencher dados SARESP para ativar o Score Educa Cajamar.
+
+## Histórico de Recursos Implementados
+
+- restauração do visual original do Educa Cajamar;
+- deploy via Railway;
+- migração para Supabase PostgreSQL;
+- suporte a imagem por instituição;
+- suporte a Google 360 no detalhamento;
+- Score Educa Cajamar;
+- destaque visual do marcador selecionado;
+- zoom e centralização em nível de rua;
+- reset do mapa ao fechar detalhe;
+- responsividade para celular e tablet;
+- aba Analítico dinâmica;
+- Assistente Educa com Gemini;
+- documentação do projeto.
 
 ## Autor
 
