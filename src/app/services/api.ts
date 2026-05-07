@@ -50,4 +50,10 @@ export const api = {
       body: JSON.stringify({ status }),
     }),
   getNeighborhoods: () => request<Neighborhood[]>("/api/neighborhoods"),
+  askAI: (question: string) =>
+    request<{ answer: string }>("/api/ai/ask", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ question }),
+    }),
 };

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Sparkles, Send, X } from 'lucide-react';
 import { Institution } from '../types';
+import { api } from '../services/api';
 
 interface AIAssistantProps {
   onClose?: () => void;
@@ -10,10 +11,9 @@ interface AIAssistantProps {
 interface Message {
   type: 'user' | 'assistant';
   text: string;
-  results?: Institution[];
 }
 
-export function AIAssistant({ onClose, institutions }: AIAssistantProps) {
+export function AIAssistant({ onClose }: AIAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       type: 'assistant',
@@ -24,38 +24,35 @@ export function AIAssistant({ onClose, institutions }: AIAssistantProps) {
   const [isTyping, setIsTyping] = useState(false);
 
   const suggestedQuestions = [
-    'Escolas perto do bairro Portal',
-    'Onde tem aula de luta para crianças?',
-    'Atividades culturais gratuitas',
-    'Qual escola tem melhor classificação?'
+    'Quais escolas existem no Jordanésia?',
+    'Quais atividades gratuitas estão abertas?',
+    'Qual escola tem melhor Score Educa Cajamar?',
+    'Quais bairros têm menos cobertura educacional?'
   ];
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    const question = input.trim();
+    if (!question || isTyping) return;
 
-    const userMessage: Message = { type: 'user', text: input };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, { type: 'user', text: question }]);
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const results = institutions.filter((inst) =>
-        inst.name.toLowerCase().includes(input.toLowerCase()) ||
-        inst.neighborhood.toLowerCase().includes(input.toLowerCase()) ||
-        inst.type.toLowerCase().includes(input.toLowerCase())
-      );
-
-      const assistantMessage: Message = {
-        type: 'assistant',
-        text: results.length > 0
-          ? `Encontrei ${results.length} resultado(s) para sua busca. Aqui estão as principais opções:`
-          : 'Não encontrei essa informação cadastrada no Educa Cajamar. Tente buscar por outro termo.',
-        results: results.slice(0, 3)
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
+    try {
+      const response = await api.askAI(question);
+      setMessages((prev) => [...prev, { type: 'assistant', text: response.answer }]);
+    } catch (error) {
+      console.error('Falha ao consultar assistente', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: 'assistant',
+          text: 'Não consegui consultar a IA agora. Tente novamente em instantes.'
+        }
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   const handleSuggestionClick = (question: string) => {
@@ -92,23 +89,7 @@ export function AIAssistant({ onClose, institutions }: AIAssistantProps) {
                   : 'bg-muted text-foreground'
               }`}
             >
-              <p className="text-sm">{message.text}</p>
-
-              {message.results && message.results.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  {message.results.map((result) => (
-                    <div
-                      key={result.id}
-                      className="bg-card/50 rounded p-2 text-xs"
-                    >
-                      <p className="font-semibold">{result.name}</p>
-                      <p className="text-muted-foreground">
-                        {result.type} • {result.neighborhood}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <p className="text-sm whitespace-pre-line">{message.text}</p>
             </div>
           </div>
         ))}
@@ -147,13 +128,13 @@ export function AIAssistant({ onClose, institutions }: AIAssistantProps) {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Pergunte algo como: escolas perto do Portal..."
             className="flex-1 px-4 py-2 bg-input-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim()}
+            disabled={!input.trim() || isTyping}
             className="px-4 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5" />

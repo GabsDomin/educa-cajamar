@@ -33,6 +33,47 @@ const asNullableNumber = (value) => {
   return Number.isFinite(number) ? number : null;
 };
 
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const calculateScoreEduca = (institution) => {
+  const notaPortugues = asNullableNumber(institution.nota_portugues_saresp);
+  const notaMatematica = asNullableNumber(institution.nota_matematica_saresp);
+  const taxaAprovacao = asNullableNumber(institution.taxa_aprovacao);
+  const taxaEvolucao = asNullableNumber(institution.taxa_evolucao);
+
+  if (
+    notaPortugues === null ||
+    notaMatematica === null ||
+    taxaAprovacao === null ||
+    taxaEvolucao === null ||
+    notaPortugues < 0 ||
+    notaMatematica < 0 ||
+    taxaAprovacao < 0 ||
+    taxaAprovacao > 100
+  ) {
+    return null;
+  }
+
+  const pontosPortugues = Math.round(clamp(notaPortugues * 30, 0, 300));
+  const pontosMatematica = Math.round(clamp(notaMatematica * 30, 0, 300));
+  const pontosAprovacao = Math.round(clamp(taxaAprovacao * 2, 0, 200));
+  const pontosEvolucao = taxaEvolucao >= 10
+    ? 200
+    : taxaEvolucao >= 5
+      ? 160
+      : taxaEvolucao >= 1
+        ? 120
+        : taxaEvolucao === 0
+          ? 100
+          : taxaEvolucao >= -4.9
+            ? 60
+            : 20;
+  const score = Math.round(clamp(pontosPortugues + pontosMatematica + pontosAprovacao + pontosEvolucao, 0, 1000));
+  const classificacao = score >= 850 ? "Excelente" : score >= 700 ? "Boa" : score >= 500 ? "Regular" : "Em atenção";
+
+  return `${score}/1000 (${classificacao})`;
+};
+
 const rowToInstitution = (row) => ({
   id: row.id,
   name: row.name,
@@ -352,6 +393,154 @@ const getInstitutionById = async (id) => {
   const result = await pool.query("SELECT * FROM institutions WHERE id = $1", [id]);
   return result.rows[0] ? rowToInstitution(result.rows[0]) : null;
 };
+
+const buildAiContext = async () => {
+  const [institutionsResult, activitiesResult, neighborhoodsResult] = await Promise.all([
+    pool.query("SELECT * FROM institutions ORDER BY name LIMIT 200"),
+    pool.query("SELECT * FROM activities ORDER BY name LIMIT 200"),
+    pool.query(`
+      WITH institution_stats AS (
+        SELECT
+          neighborhood,
+          COUNT(*)::int AS institution_count,
+          COUNT(*) FILTER (WHERE type = 'Escola')::int AS school_count,
+          COALESCE(ROUND(AVG(rating)::numeric, 1), 0)::float AS average_rating
+        FROM institutions
+        WHERE neighborhood IS NOT NULL AND neighborhood <> ''
+        GROUP BY neighborhood
+      ),
+      activity_stats AS (
+        SELECT neighborhood, COUNT(*)::int AS activity_count
+        FROM activities
+        WHERE neighborhood IS NOT NULL AND neighborhood <> ''
+        GROUP BY neighborhood
+      )
+      SELECT
+        i.neighborhood AS name,
+        i.school_count,
+        i.institution_count,
+        COALESCE(a.activity_count, 0)::int AS activity_count,
+        i.average_rating,
+        ROUND((i.school_count * 2 + i.institution_count * 1.5 + COALESCE(a.activity_count, 0))::numeric, 1)::float AS coverage_index
+      FROM institution_stats i
+      LEFT JOIN activity_stats a ON a.neighborhood = i.neighborhood
+      ORDER BY i.neighborhood
+      LIMIT 80
+    `),
+  ]);
+
+  const institutions = institutionsResult.rows.map(rowToInstitution);
+  const activities = activitiesResult.rows.map(rowToActivity);
+  const neighborhoods = neighborhoodsResult.rows;
+
+  return [
+    "INSTITUIÇÕES CADASTRADAS:",
+    ...institutions.map((institution) => {
+      const score = institution.type === "Escola" ? calculateScoreEduca(institution) : null;
+      return [
+        `- ${institution.name}`,
+        `tipo: ${institution.type}`,
+        `bairro: ${institution.neighborhood}`,
+        `endereço: ${institution.address}, ${institution.city}/${institution.state}`,
+        `telefone: ${institution.phone}`,
+        `gratuito: ${institution.isFree}`,
+        `acessibilidade: ${institution.accessibility}`,
+        `avaliação: ${institution.rating}/5`,
+        score ? `score educa cajamar: ${score}` : null,
+      ].filter(Boolean).join("; ");
+    }),
+    "",
+    "ATIVIDADES CADASTRADAS:",
+    ...activities.map((activity) => [
+      `- ${activity.name}`,
+      `instituição: ${activity.institutionName}`,
+      `categoria: ${activity.category}`,
+      `bairro: ${activity.neighborhood}`,
+      `dias: ${(activity.weekDays || []).join(", ")}`,
+      `horário: ${activity.startTime} às ${activity.endTime}`,
+      `gratuita: ${activity.isFree ? "sim" : "não"}`,
+      `vagas: ${activity.availableSlots}/${activity.totalSlots}`,
+      `status: ${activity.status}`,
+      `público: ${activity.targetAudience}`,
+    ].join("; ")),
+    "",
+    "RESUMO POR BAIRRO:",
+    ...neighborhoods.map((neighborhood) => [
+      `- ${neighborhood.name}`,
+      `escolas: ${neighborhood.school_count}`,
+      `instituições: ${neighborhood.institution_count}`,
+      `atividades: ${neighborhood.activity_count}`,
+      `avaliação média: ${neighborhood.average_rating}`,
+      `índice de cobertura: ${neighborhood.coverage_index}`,
+    ].join("; ")),
+  ].join("\n").slice(0, 45000);
+};
+
+const askGemini = async (question, context) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not configured.");
+  }
+
+  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{
+            text: [
+              "Você é o Assistente Educa Cajamar.",
+              "Responda em português brasileiro, com linguagem clara e útil para moradores de Cajamar.",
+              "Use somente os dados fornecidos no contexto do Educa Cajamar.",
+              "Se a informação não estiver no contexto, diga que ela ainda não está cadastrada.",
+              "Não invente endereços, telefones, vagas, notas, horários ou rankings.",
+              "Prefira respostas curtas, organizadas e acionáveis.",
+            ].join(" "),
+          }],
+        },
+        contents: [{
+          role: "user",
+          parts: [{
+            text: `Pergunta do usuário:\n${question}\n\nContexto do Educa Cajamar:\n${context}`,
+          }],
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 700,
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Gemini request failed: ${response.status} ${details}`);
+  }
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text || "")
+    .join("")
+    .trim();
+
+  return text || "Não consegui gerar uma resposta agora. Tente novamente em instantes.";
+};
+
+app.post(
+  "/api/ai/ask",
+  asyncHandler(async (req, res) => {
+    const question = String(req.body?.question || "").trim();
+    if (!question) return res.status(400).json({ message: "Question is required" });
+    if (question.length > 500) return res.status(400).json({ message: "Question is too long" });
+
+    const context = await buildAiContext();
+    const answer = await askGemini(question, context);
+    res.json({ answer });
+  })
+);
 
 app.get(
   "/api/institutions",
