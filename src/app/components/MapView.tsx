@@ -25,9 +25,23 @@ export function MapView({ institutions, onMarkerClick, selectedInstitution }: Ma
       maxZoom: 18
     }).setView([-23.3558, -46.8762], 13);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    const primaryTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap &copy; CARTO'
-    }).addTo(map);
+    });
+    const fallbackTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    });
+    let fallbackEnabled = false;
+
+    primaryTiles.on('tileerror', () => {
+      if (fallbackEnabled) return;
+
+      fallbackEnabled = true;
+      map.removeLayer(primaryTiles);
+      fallbackTiles.addTo(map);
+    });
+
+    primaryTiles.addTo(map);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     markerLayerRef.current = L.layerGroup().addTo(map);
