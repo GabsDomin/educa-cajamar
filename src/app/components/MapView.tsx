@@ -10,6 +10,14 @@ interface MapViewProps {
   selectedInstitution?: Institution | null;
 }
 
+const isValidCajamarCoordinate = (institution: Institution) =>
+  Number.isFinite(institution.lat) &&
+  Number.isFinite(institution.lng) &&
+  institution.lat >= -24 &&
+  institution.lat <= -23 &&
+  institution.lng >= -48 &&
+  institution.lng <= -46;
+
 export function MapView({ institutions, onMarkerClick, selectedInstitution }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
@@ -71,7 +79,7 @@ export function MapView({ institutions, onMarkerClick, selectedInstitution }: Ma
     markerLayer.clearLayers();
 
     const points: [number, number][] = [];
-    institutions.forEach((institution) => {
+    institutions.filter(isValidCajamarCoordinate).forEach((institution) => {
       const color = getMarkerColor(institution.type);
       const isSelected = selectedInstitution?.id === institution.id;
 
@@ -108,7 +116,7 @@ export function MapView({ institutions, onMarkerClick, selectedInstitution }: Ma
     window.requestAnimationFrame(() => {
       map.invalidateSize();
 
-      if (selectedInstitution?.lat && selectedInstitution?.lng) {
+      if (selectedInstitution && isValidCajamarCoordinate(selectedInstitution)) {
         map.flyTo([selectedInstitution.lat, selectedInstitution.lng], 17, {
           animate: true,
           duration: 0.8
