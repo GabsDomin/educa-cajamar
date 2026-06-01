@@ -47,7 +47,16 @@ export function MapView({ institutions, onMarkerClick, selectedInstitution }: Ma
     markerLayerRef.current = L.layerGroup().addTo(map);
     leafletMapRef.current = map;
 
+    const refreshMapSize = () => {
+      window.requestAnimationFrame(() => map.invalidateSize());
+    };
+    const resizeObserver = new ResizeObserver(refreshMapSize);
+    resizeObserver.observe(mapRef.current);
+    const initialRefresh = window.setTimeout(refreshMapSize, 150);
+
     return () => {
+      window.clearTimeout(initialRefresh);
+      resizeObserver.disconnect();
       map.remove();
       leafletMapRef.current = null;
       markerLayerRef.current = null;
@@ -96,16 +105,20 @@ export function MapView({ institutions, onMarkerClick, selectedInstitution }: Ma
       points.push([institution.lat, institution.lng]);
     });
 
-    if (selectedInstitution?.lat && selectedInstitution?.lng) {
-      map.flyTo([selectedInstitution.lat, selectedInstitution.lng], 17, {
-        animate: true,
-        duration: 0.8
-      });
-    } else if (points.length > 0) {
-      map.fitBounds(points, { padding: [80, 80], maxZoom: 15 });
-    } else {
-      map.setView([-23.3558, -46.8762], 13);
-    }
+    window.requestAnimationFrame(() => {
+      map.invalidateSize();
+
+      if (selectedInstitution?.lat && selectedInstitution?.lng) {
+        map.flyTo([selectedInstitution.lat, selectedInstitution.lng], 17, {
+          animate: true,
+          duration: 0.8
+        });
+      } else if (points.length > 0) {
+        map.fitBounds(points, { padding: [80, 80], maxZoom: 15 });
+      } else {
+        map.setView([-23.3558, -46.8762], 13);
+      }
+    });
   }, [institutions, selectedInstitution, onMarkerClick]);
 
   return (
